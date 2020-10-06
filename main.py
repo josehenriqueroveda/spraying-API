@@ -3,9 +3,9 @@ from starlette.responses import RedirectResponse
 from ratelimit import limits
 import requests
 import json
+import config
 
 ONE_MINUTE = 60
-OWM_KEY = '6827dd5e08e4eae1f63be6155c0a6315'
 
 app = FastAPI(title='Spraying conditions API', description='API for real-time analysis of climatic conditions generating the result whether they are suitable or not for agricultural spraying.')
 
@@ -22,7 +22,7 @@ async def docs():
 async def check_spray_condition(city: str):
     try:
         response = requests.get(
-            f'http://api.openweathermap.org/data/2.5/weather?q={city}&units=metric&lang=pt&appid={OWM_KEY}')
+            f'http://api.openweathermap.org/data/2.5/weather?q={city}&units=metric&lang=pt&appid={config.OWM_KEY}')
 
         wheather_info = json.loads(response.text)
         description = wheather_info['weather'][0]['main']
@@ -36,7 +36,19 @@ async def check_spray_condition(city: str):
         if description not in bad_conditions and (temperature < 30 and feels_like < 30 and humidity > 50 and 3 < wind < 10):
             spray_condition = 'Good weather conditions for spraying'
         else:
-            spray_condition = 'Bad weather conditions for spraying'
+            if description in bad_conditions:
+                spray_condition = f'Bad weather conditions for spraying: {description}'
+            elif temperature > 30 and feels_like > 30 and humidity > 50 and 3 < wind < 10:
+                spray_condition = f'Bad weather conditions: {temperature} is too hot for spraying'
+            elif temperature < 30 and feels_like < 30 and humidity < 50 and 3 < wind < 10:
+                spray_condition = f'Bad weather conditions: {humidity} air humidity. It is below that recommended for spraying'
+            elif temperature < 30 and  feels_like < 30 and humidity > 50 and wind < 3:
+                spray_condition = f'Bad weather conditions: The wind speed of {wind} is very low and not recommended for spraying'
+            elif temperature < 30 and  feels_like < 30 and humidity > 50 and wind > 10:
+                spray_condition = f'Bad weather conditions: The wind speed of {wind} is above the recommended and can cause drift.'
+            else:
+                spray_condition = 'Bad weather conditions for spraying'    
+
 
         return {'city': city,
                 'description': description,
