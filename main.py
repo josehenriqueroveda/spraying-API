@@ -21,7 +21,7 @@ async def docs():
 @app.get("/spray/condition")
 async def check_spray_condition(city: str):
     try:
-        response = requests.get(
+        response = await requests.get(
             f'http://api.openweathermap.org/data/2.5/weather?q={city}&units=metric&lang=pt&appid={config.OWM_KEY}')
 
         wheather_info = json.loads(response.text)
@@ -33,29 +33,30 @@ async def check_spray_condition(city: str):
 
         bad_conditions = ['Thunderstorm', 'Drizzle', 'Rain', 'Snow']
 
-        if description not in bad_conditions and (temperature < 30 and feels_like < 30 and humidity > 50 and 3 < wind < 10):
+        if description not in bad_conditions and (10 < temperature < 30) and (10 < feels_like < 30) and (humidity > 50) and (3 < wind < 10):
             spray_condition = 'Good weather conditions for spraying'
         else:
             if description in bad_conditions:
                 spray_condition = f'Bad weather conditions for spraying: {description}'
-            elif temperature > 30 and feels_like > 30 and humidity > 50 and 3 < wind < 10:
-                spray_condition = f'Bad weather conditions: {temperature} is too hot for spraying'
-            elif temperature < 30 and feels_like < 30 and humidity < 50 and 3 < wind < 10:
-                spray_condition = f'Bad weather conditions: {humidity} air humidity. It is below that recommended for spraying'
-            elif temperature < 30 and  feels_like < 30 and humidity > 50 and wind < 3:
-                spray_condition = f'Bad weather conditions: The wind speed of {wind} is very low and not recommended for spraying'
-            elif temperature < 30 and  feels_like < 30 and humidity > 50 and wind > 10:
-                spray_condition = f'Bad weather conditions: The wind speed of {wind} is above the recommended and can cause drift.'
+            elif (temperature > 30) and (feels_like > 30) and (humidity > 50) and (3 < wind < 10):
+                spray_condition = f'Bad weather conditions: {temperature} °C is too hot for spraying'
+            elif (temperature <= 10) and (feels_like <= 10) and (humidity > 50) and (3 < wind < 10):
+                spray_condition = f'Bad weather conditions: {temperature} °C is too cold for spraying'
+            elif (temperature < 30) and (feels_like < 30) and (humidity < 50) and (3 < wind < 10):
+                spray_condition = f'Bad weather conditions: {humidity} % air humidity. It is below that recommended for spraying'
+            elif (temperature < 30) and  (feels_like < 30) and (humidity > 50) and (wind < 3):
+                spray_condition = f'Bad weather conditions: The wind speed of {wind} km/h is very low and not recommended for spraying'
+            elif (temperature < 30) and (feels_like < 30) and (humidity > 50) and (wind > 10):
+                spray_condition = f'Bad weather conditions: The wind speed of {wind} km/h is above the recommended and can cause drift.'
             else:
                 spray_condition = 'Bad weather conditions for spraying'    
 
-
         return {'city': city,
                 'description': description,
-                'temperature': f'{temperature}°C',
-                'feels_like': f'{feels_like}°C',
-                'humidity': f'{humidity}%',
-                'wind': f'{wind}km/h',
+                'temperature': f'{temperature} °C',
+                'feels_like': f'{feels_like} °C',
+                'humidity': f'{humidity} %',
+                'wind': f'{wind} km/h',
                 'spray_condition': spray_condition}
     except:
         pass
