@@ -1,6 +1,7 @@
 from fastapi import FastAPI
 from starlette.responses import RedirectResponse
 from ratelimit import limits
+import sys
 import uvicorn
 import requests
 import json
@@ -62,7 +63,8 @@ async def check_spray_condition(city: str):
                    'spray_condition': spray_condition})
         return result
     except:
-        pass
+        print("Unexpected error:", sys.exc_info()[0])
+        raise
 
 if __name__ == "__main__":
     uvicorn.run(app, host="0.0.0.0", port=8000)
